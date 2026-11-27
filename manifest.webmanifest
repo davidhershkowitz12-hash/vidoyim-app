@@ -1,0 +1,15 @@
+{
+  "name": "ניהול וידויים",
+  "short_name": "וידויים",
+  "description": "ניהול האוטומציה פייסבוק ← טלגרם",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6fa",
+  "theme_color": "#1d6fd8",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
