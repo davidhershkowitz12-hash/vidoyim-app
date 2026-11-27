@@ -5,188 +5,330 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ניהול וידויים</title>
 <meta name="description" content="ניהול האוטומציה ששולחת את הפוסטים מדף הפייסבוק לערוץ הטלגרם">
-<meta name="theme-color" content="#1d6fd8">
+<meta name="theme-color" content="#4f46e5">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f4f6fa; --surface: #ffffff; --surface-2: #eef2f8; --text: #13202f; --muted: #5b6b7f;
-  --border: #d9e0ea; --accent: #1d6fd8; --accent-text: #ffffff; --ok: #187a3e; --ok-bg: #e3f4ea;
-  --warn: #9a5b00; --warn-bg: #fff2d9; --err: #b42318; --err-bg: #fde8e6; --bubble: #e8f3ff;
-  --focus: #ffb800; --radius: 14px; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  --bg: #f5f6fb; --surface: #ffffff; --surface-2: #f0f2f8; --text: #0f172a; --muted: #55607a;
+  --border: #e3e7f0; --brand: #4f46e5; --brand-2: #2563eb; --on-brand: #ffffff;
+  --ok: #157a46; --ok-bg: #dff5e9; --warn: #8a5300; --warn-bg: #fff0d1; --err: #b42318; --err-bg: #fde7e5;
+  --bubble: #e9efff; --focus: #f59e0b; --radius: 20px;
+  --shadow: 0 1px 2px rgba(15,23,42,.05), 0 8px 24px rgba(15,23,42,.06);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1621; --surface: #17212f; --surface-2: #1e2a3a; --text: #e8eef6; --muted: #9aabbf;
-    --border: #2b3a4e; --accent: #4c95f0; --accent-text: #08111c; --ok: #5fd08c; --ok-bg: #133524;
-    --warn: #f3b552; --warn-bg: #3a2a0e; --err: #ff8a80; --err-bg: #3d1714; --bubble: #1b3350;
-    --shadow: none;
+    --bg: #0b1020; --surface: #141a2e; --surface-2: #1b2340; --text: #eef1f8; --muted: #a3adc6;
+    --border: #273152; --brand: #7c74ff; --brand-2: #4f8bff; --on-brand: #ffffff;
+    --ok: #5ad69a; --ok-bg: #12301f; --warn: #f5b84e; --warn-bg: #36270b; --err: #ff8f85; --err-bg: #3a1513;
+    --bubble: #1d2a52; --shadow: 0 1px 0 rgba(255,255,255,.03);
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1621; --surface: #17212f; --surface-2: #1e2a3a; --text: #e8eef6; --muted: #9aabbf;
-  --border: #2b3a4e; --accent: #4c95f0; --accent-text: #08111c; --ok: #5fd08c; --ok-bg: #133524;
-  --warn: #f3b552; --warn-bg: #3a2a0e; --err: #ff8a80; --err-bg: #3d1714; --bubble: #1b3350;
-  --shadow: none;
+  --bg: #0b1020; --surface: #141a2e; --surface-2: #1b2340; --text: #eef1f8; --muted: #a3adc6;
+  --border: #273152; --brand: #7c74ff; --brand-2: #4f8bff; --on-brand: #ffffff;
+  --ok: #5ad69a; --ok-bg: #12301f; --warn: #f5b84e; --warn-bg: #36270b; --err: #ff8f85; --err-bg: #3a1513;
+  --bubble: #1d2a52; --shadow: 0 1px 0 rgba(255,255,255,.03);
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--text);
-  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Rubik, Arial, sans-serif;
+  font: 17px/1.6 "Heebo", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
-main { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
-header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 16px; }
-header.top h1 { font-size: 1.35rem; margin: 0; line-height: 1.25; }
-header.top p { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+.skip { position: absolute; inset-inline-start: 8px; top: -60px; background: var(--brand); color: var(--on-brand); padding: 10px 14px; border-radius: 10px; z-index: 50; }
+.skip:focus { top: 8px; }
+main { max-width: 560px; margin: 0 auto; padding: 16px 16px calc(110px + env(safe-area-inset-bottom)); }
+h1, h2, h3 { line-height: 1.25; margin: 0; }
+svg.i { width: 22px; height: 22px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Hero */
+.hero {
+  position: relative; overflow: hidden; border-radius: 26px; padding: 22px 20px 20px; color: var(--on-brand);
+  background: radial-gradient(120% 140% at 100% 0%, var(--brand-2) 0%, var(--brand) 55%, #3b2bb8 100%);
+  box-shadow: 0 12px 32px rgba(79,70,229,.28);
+}
+.hero::after { content: ""; position: absolute; inset-inline-start: -60px; bottom: -80px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255,255,255,.08); }
+.hero .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.hero h1 { font-size: 1.3rem; font-weight: 800; }
+.hero .sub { opacity: .88; font-size: .92rem; margin-top: 2px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-weight: 700; font-size: .9rem; background: rgba(255,255,255,.18); backdrop-filter: blur(6px); }
+.pill .d { width: 9px; height: 9px; border-radius: 50%; background: #7dffb5; }
+.pill.off .d { background: #ffd27d; }
+.next { margin-top: 22px; position: relative; z-index: 1; }
+.next .lbl { opacity: .85; font-size: .9rem; }
+.next .big { font-size: 2rem; font-weight: 800; letter-spacing: -.5px; }
+.next .in { opacity: .9; }
+@media (prefers-reduced-motion: no-preference) {
+  .pill:not(.off) .d { animation: pulse 2s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(125,255,181,.7); } 70% { box-shadow: 0 0 0 9px rgba(125,255,181,0); } 100% { box-shadow: 0 0 0 0 rgba(125,255,181,0); } }
+}
+.iconbtn { width: 44px; height: 44px; border-radius: 14px; border: 0; background: rgba(255,255,255,.16); color: inherit; display: grid; place-items: center; cursor: pointer; }
+
+/* Actions */
+.actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+.tile {
+  font: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  border-radius: 18px; padding: 14px 8px; min-height: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  font-weight: 700; font-size: .92rem; box-shadow: var(--shadow); text-align: center;
+}
+.tile .ic { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; background: var(--surface-2); color: var(--brand); }
+.tile.primary .ic { background: var(--brand); color: var(--on-brand); }
+.tile:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Cards */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; margin-bottom: 14px; }
-.card h2 { font-size: 1.05rem; margin: 0 0 12px; }
-.status { display: flex; align-items: center; gap: 14px; }
-.dot { width: 14px; height: 14px; border-radius: 50%; flex: none; background: var(--muted); }
-.dot.on { background: var(--ok); box-shadow: 0 0 0 5px var(--ok-bg); }
-.dot.off { background: var(--warn); box-shadow: 0 0 0 5px var(--warn-bg); }
-.status strong { font-size: 1.25rem; display: block; }
-.status span { color: var(--muted); }
-.row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-button, .btn {
-  font: inherit; font-weight: 600; border-radius: 12px; border: 1px solid var(--border);
-  background: var(--surface-2); color: var(--text); padding: 12px 16px; min-height: 48px; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
-}
-button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-button.grow { flex: 1 1 180px; }
-button:disabled { opacity: .55; cursor: not-allowed; }
-button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
-  outline: 3px solid var(--focus); outline-offset: 2px;
-}
-.link { color: var(--accent); }
+.card-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.card h2 { font-size: 1.05rem; font-weight: 700; }
 .muted { color: var(--muted); }
 .small { font-size: .9rem; }
-.kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
-.kv dt { color: var(--muted); }
-.kv dd { margin: 0; font-weight: 600; }
+.banner { display: flex; gap: 12px; align-items: flex-start; background: var(--bubble); border: 1px solid var(--border); border-radius: 18px; padding: 14px; margin-bottom: 14px; }
+.banner .txt { flex: 1; }
+.banner b { display: block; }
+
 ul.list { list-style: none; margin: 0; padding: 0; }
-ul.list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
-ul.list li:first-child { border-top: 0; }
-.badge { font-size: .8rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
-.badge.ok { background: var(--ok-bg); color: var(--ok); }
-.badge.err { background: var(--err-bg); color: var(--err); }
-.badge.run { background: var(--warn-bg); color: var(--warn); }
-label { display: block; font-weight: 600; margin: 14px 0 6px; }
-.hint { display: block; font-weight: 400; color: var(--muted); font-size: .88rem; margin-top: 2px; }
+ul.list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
+ul.list li:first-child { border-top: 0; padding-top: 4px; }
+.li-ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--surface-2); color: var(--muted); }
+.li-ic.ok { background: var(--ok-bg); color: var(--ok); }
+.li-ic.err { background: var(--err-bg); color: var(--err); }
+.li-ic.run { background: var(--warn-bg); color: var(--warn); }
+.li-main { flex: 1; min-width: 0; }
+.li-main .t { font-weight: 700; }
+.li-main .s { color: var(--muted); font-size: .88rem; }
+a.lnk { color: var(--brand); font-weight: 700; text-decoration: none; padding: 8px 4px; }
+a.lnk:hover { text-decoration: underline; }
+.empty { color: var(--muted); padding: 8px 0; }
+
+/* Forms */
+label { display: block; font-weight: 700; margin: 16px 0 6px; }
+.hint { display: block; font-weight: 400; color: var(--muted); font-size: .88rem; }
 input, textarea, select {
-  font: inherit; width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
-  background: var(--surface); color: var(--text); min-height: 48px;
+  font: inherit; width: 100%; padding: 13px 14px; border-radius: 14px; border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--text); min-height: 50px;
 }
-textarea { min-height: 150px; resize: vertical; line-height: 1.5; }
+input:hover, textarea:hover, select:hover { border-color: var(--muted); }
+textarea { min-height: 160px; resize: vertical; line-height: 1.55; }
 input[dir="ltr"] { text-align: left; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.bubble { background: var(--bubble); border-radius: 14px 14px 4px 14px; padding: 12px 14px; white-space: pre-wrap; word-break: break-word; font-size: .95rem; }
-.toast { position: fixed; inset-inline: 16px; bottom: 16px; max-width: 608px; margin: 0 auto; padding: 14px 16px; border-radius: 12px; font-weight: 600; box-shadow: 0 6px 24px rgba(0,0,0,.2); display: none; z-index: 10; }
-.toast.show { display: block; }
-.toast.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok); }
-.toast.err { background: var(--err-bg); color: var(--err); border: 1px solid var(--err); }
-.toast.info { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
-ol.steps { padding-inline-start: 20px; margin: 8px 0 0; }
+.bubble-wrap { background: var(--surface-2); border-radius: 18px; padding: 14px; }
+.bubble { background: var(--surface); border: 1px solid var(--border); border-radius: 18px 18px 6px 18px; padding: 12px 14px; white-space: pre-wrap; word-break: break-word; font-size: .95rem; max-width: 92%; box-shadow: var(--shadow); }
+.btn {
+  font: inherit; font-weight: 700; border-radius: 16px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+  padding: 13px 18px; min-height: 52px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+}
+.btn.primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border-color: transparent; color: var(--on-brand); box-shadow: 0 8px 20px rgba(79,70,229,.25); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--err); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.stack > * + * { margin-top: 10px; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [role="tab"]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px;
+}
+
+/* Login */
+.login { min-height: calc(100vh - 140px); display: flex; flex-direction: column; justify-content: center; }
+.logo { width: 76px; height: 76px; border-radius: 24px; margin: 0 auto 16px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 12px 28px rgba(79,70,229,.35); }
+.logo svg { width: 38px; height: 38px; }
+.login h1 { text-align: center; font-size: 1.6rem; font-weight: 800; }
+.login .sub { text-align: center; color: var(--muted); margin: 6px 0 24px; }
+details.tok { margin-top: 14px; }
+details.tok summary { cursor: pointer; font-weight: 700; color: var(--brand); padding: 10px 0; list-style: none; text-align: center; }
+details.tok summary::-webkit-details-marker { display: none; }
+ol.steps { padding-inline-start: 22px; margin: 6px 0 0; }
 ol.steps li { margin-bottom: 8px; }
+code, .mono { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+
+/* Bottom nav */
+nav.tabs {
+  position: fixed; bottom: 0; inset-inline: 0; z-index: 20; background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--border);
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+}
+nav.tabs .in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+[role="tab"] {
+  font: inherit; font-size: .82rem; font-weight: 700; border: 0; background: none; color: var(--muted); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border-radius: 14px; min-height: 56px;
+}
+[role="tab"][aria-selected="true"] { color: var(--brand); background: var(--surface-2); }
+
+/* Toast + dialog */
+.toast { position: fixed; inset-inline: 16px; bottom: calc(90px + env(safe-area-inset-bottom)); max-width: 528px; margin: 0 auto; padding: 14px 16px; border-radius: 16px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,.2); display: none; z-index: 40; }
+.toast.show { display: block; }
+.toast.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid currentColor; }
+.toast.err { background: var(--err-bg); color: var(--err); border: 1px solid currentColor; }
+.toast.info { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+dialog { border: 1px solid var(--border); border-radius: 24px; background: var(--surface); color: var(--text); padding: 22px; width: min(420px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgba(8,12,24,.55); backdrop-filter: blur(2px); }
+dialog h2 { font-size: 1.2rem; margin-bottom: 8px; }
+dialog .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-dialog { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 20px; max-width: min(440px, calc(100vw - 32px)); }
-dialog::backdrop { background: rgba(0,0,0,.45); }
-dialog h2 { margin-top: 0; font-size: 1.15rem; }
 [hidden] { display: none !important; }
-@media (max-width: 420px) { .two { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: no-preference) { button { transition: filter .15s; } button:hover:not(:disabled) { filter: brightness(1.06); } }
+@media (max-width: 380px) { .two { grid-template-columns: 1fr; } .tile { font-size: .85rem; } }
+@media (prefers-reduced-motion: no-preference) {
+  .tile, .btn, [role="tab"] { transition: transform .12s ease, filter .15s ease, background .15s ease; }
+  .tile:active:not(:disabled), .btn:active:not(:disabled) { transform: scale(.97); }
+  .tile:hover:not(:disabled), .btn:hover:not(:disabled) { filter: brightness(1.04); }
+}
 </style>
 </head>
 <body>
-<main>
-  <header class="top">
-    <div>
-      <h1>וידויים של דוסים</h1>
-      <p>פייסבוק ← טלגרם, כל יום אוטומטית</p>
-    </div>
-    <button id="refreshBtn" aria-label="רענון" title="רענון" hidden>⟳</button>
-  </header>
+<a class="skip" href="#content">דילוג לתוכן</a>
 
-  <!-- Setup -->
-  <section id="setup" class="card" hidden aria-labelledby="setupTitle">
-    <h2 id="setupTitle">חיבור חד־פעמי</h2>
-    <p>כדי שהאפליקציה תוכל לנהל את האוטומציה, צריך "מפתח גישה" מ־GitHub. המפתח נשמר רק במכשיר הזה.</p>
-    <ol class="steps">
-      <li><a class="link" id="tokenLink" target="_blank" rel="noopener">לפתוח את דף יצירת המפתח ב־GitHub</a>. ההגדרות כבר ממולאות.</li>
-      <li>תחת <b>Repository access</b> לבחור <b>Only select repositories</b>, ואז את <b dir="ltr">fb-to-telegram</b>.</li>
-      <li>לגלול למטה וללחוץ <b>Generate token</b>, ואז להעתיק את המפתח (מתחיל ב־<span dir="ltr">github_pat_</span>).</li>
-      <li>להדביק אותו כאן:</li>
-    </ol>
-    <label for="tokenInput">מפתח גישה</label>
-    <input id="tokenInput" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="github_pat_...">
-    <div class="row"><button id="connectBtn" class="primary grow">התחברות</button></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-fb" viewBox="0 0 24 24"><path d="M15 8h-2a2 2 0 0 0-2 2v11"/><path d="M8 13h6"/><rect x="3" y="3" width="18" height="18" rx="5"/></symbol>
+  <symbol id="i-finger" viewBox="0 0 24 24"><path d="M12 11v3a8 8 0 0 1-1 4"/><path d="M8 11a4 4 0 0 1 8 0v2"/><path d="M5 12a7 7 0 0 1 14-1"/><path d="M16 16a14 14 0 0 1-1 4"/><path d="M8 15a10 10 0 0 1-1 4"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 9.2-9.2M17 6l3 3M14 9l2 2"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 24 24"><path d="M5 6h9a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="m17 10 4-2.5v8L17 13"/></symbol>
+</svg>
+
+<main id="content">
+  <!-- ============ LOGIN ============ -->
+  <section id="login" class="login" hidden aria-labelledby="loginTitle">
+    <div class="logo" aria-hidden="true"><svg class="i"><use href="#i-logo"/></svg></div>
+    <h1 id="loginTitle">ניהול וידויים</h1>
+    <p class="sub">פייסבוק ← טלגרם, אוטומטית כל יום</p>
+
+    <div class="stack">
+      <button id="passkeyLoginBtn" class="btn primary" hidden>
+        <svg class="i"><use href="#i-finger"/></svg> כניסה עם Face ID / טביעת אצבע
+      </button>
+    </div>
+
+    <details id="tokDetails" class="tok">
+      <summary>כניסה ראשונה עם מפתח גישה</summary>
+      <div class="card" style="margin-top:6px">
+        <p style="margin-top:0">פעם אחת בלבד: יוצרים מפתח גישה ב־GitHub ומדביקים כאן. אחר כך אפשר להגדיר כניסה עם Face ID או טביעת אצבע.</p>
+        <ol class="steps">
+          <li><a class="lnk" id="tokenLink" target="_blank" rel="noopener" style="padding:0">פתיחת דף יצירת המפתח</a> (ההרשאות כבר ממולאות).</li>
+          <li>ב־<b>Expiration</b> לבחור תאריך בעוד שנה.</li>
+          <li>ב־<b>Repository access</b> לבחור <b>Only select repositories</b>, ולסמן את <b class="mono" dir="ltr">fb-to-telegram</b> ואת <b class="mono" dir="ltr">vidoyim-app</b>.</li>
+          <li>ללחוץ <b>Generate token</b> ולהעתיק את המפתח.</li>
+        </ol>
+        <label for="tokenInput">מפתח גישה</label>
+        <input id="tokenInput" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="github_pat_...">
+        <div style="margin-top:12px"><button id="connectBtn" class="btn primary"><svg class="i"><use href="#i-key"/></svg> כניסה</button></div>
+      </div>
+    </details>
   </section>
 
-  <!-- Dashboard -->
-  <div id="dash" hidden>
-    <section class="card" aria-labelledby="statusTitle">
-      <h2 id="statusTitle" class="sr-only">מצב האוטומציה</h2>
-      <div class="status">
-        <span id="statusDot" class="dot" aria-hidden="true"></span>
-        <div>
-          <strong id="statusText">טוען…</strong>
-          <span id="nextText"></span>
+  <!-- ============ APP ============ -->
+  <div id="app" hidden>
+    <!-- HOME -->
+    <section id="tab-home" role="tabpanel" aria-labelledby="t-home">
+      <div class="hero">
+        <div class="top">
+          <span id="statusPill" class="pill" role="status"><span class="d" aria-hidden="true"></span><span id="statusText">טוען…</span></span>
+          <button id="refreshBtn" class="iconbtn" aria-label="רענון הנתונים"><svg class="i"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div class="next">
+          <div class="lbl" id="nextLbl">השליחה הבאה</div>
+          <div class="big" id="nextBig">—</div>
+          <div class="in" id="nextIn"></div>
         </div>
       </div>
-      <div class="row">
-        <button id="sendBtn" class="primary grow">שליחה עכשיו</button>
-        <button id="dryBtn" class="grow">בדיקה בלי שליחה</button>
+
+      <div class="actions">
+        <button id="sendBtn" class="tile primary"><span class="ic"><svg class="i"><use href="#i-send"/></svg></span>שליחה עכשיו</button>
+        <button id="dryBtn" class="tile"><span class="ic"><svg class="i"><use href="#i-eye"/></svg></span>בדיקה בלי שליחה</button>
+        <button id="toggleBtn" class="tile"><span class="ic"><svg class="i" id="toggleIc"><use href="#i-pause"/></svg></span><span id="toggleTxt">השהיה</span></button>
       </div>
-      <div class="row"><button id="toggleBtn" class="grow">השהיה</button></div>
-    </section>
 
-    <section class="card" aria-labelledby="sentTitle">
-      <h2 id="sentTitle">נשלחו לאחרונה</h2>
-      <p id="lastSent" class="muted small"></p>
-      <ul id="sentList" class="list"></ul>
-    </section>
-
-    <section class="card" aria-labelledby="runsTitle">
-      <h2 id="runsTitle">הרצות אחרונות</h2>
-      <ul id="runsList" class="list" aria-live="polite"></ul>
-    </section>
-
-    <section class="card" aria-labelledby="setTitle">
-      <h2 id="setTitle">הגדרות</h2>
-      <label for="tplInput">נוסח ההודעה
-        <span class="hint"><bdi dir="ltr">{{message}}</bdi> יוחלף בטקסט של הפוסט. נשלח כטקסט רגיל, כמו במייק.</span>
-      </label>
-      <textarea id="tplInput" dir="auto"></textarea>
-      <div class="two">
-        <div>
-          <label for="hourInput">שעת שליחה (שעון ישראל)</label>
-          <select id="hourInput"></select>
-        </div>
-        <div>
-          <label for="limitInput">מקסימום פוסטים בכל שליחה</label>
-          <input id="limitInput" type="number" min="1" max="20" inputmode="numeric">
-        </div>
+      <div id="passkeyBanner" class="banner" hidden>
+        <svg class="i" style="color:var(--brand);margin-top:3px"><use href="#i-finger"/></svg>
+        <div class="txt"><b>כניסה מהירה ומאובטחת</b><span class="small muted">הגדר כניסה עם Face ID או טביעת אצבע, ולא תצטרך יותר את המפתח.</span></div>
+        <button id="bannerSetupBtn" class="btn" style="width:auto;min-height:44px;padding:8px 14px">הגדרה</button>
       </div>
-      <label>תצוגה מקדימה</label>
-      <div id="preview" class="bubble" dir="auto"></div>
-      <div class="row"><button id="saveBtn" class="primary grow">שמירת ההגדרות</button></div>
+
+      <section class="card" aria-labelledby="sentTitle">
+        <div class="card-h"><h2 id="sentTitle">נשלחו לאחרונה</h2></div>
+        <p id="lastSent" class="small muted" style="margin:0 0 6px"></p>
+        <ul id="sentList" class="list"></ul>
+      </section>
     </section>
 
-    <p class="small muted">
-      <a class="link" id="repoLink" target="_blank" rel="noopener">המאגר ב־GitHub</a> ·
-      <button id="logoutBtn" class="small" style="min-height:auto;padding:4px 8px;border:0;background:none;color:var(--accent);font-weight:400;text-decoration:underline">ניתוק מהמכשיר הזה</button>
-    </p>
+    <!-- HISTORY -->
+    <section id="tab-history" role="tabpanel" aria-labelledby="t-history" hidden>
+      <section class="card" aria-labelledby="runsTitle">
+        <div class="card-h"><h2 id="runsTitle">היסטוריית הרצות</h2></div>
+        <ul id="runsList" class="list" aria-live="polite"></ul>
+      </section>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" role="tabpanel" aria-labelledby="t-settings" hidden>
+      <section class="card" aria-labelledby="setTitle">
+        <h2 id="setTitle">ההודעה בטלגרם</h2>
+        <label for="tplInput">נוסח ההודעה
+          <span class="hint">במקום <bdi class="mono" dir="ltr">{{message}}</bdi> יופיע הטקסט של הפוסט. נשלח כטקסט רגיל.</span>
+        </label>
+        <textarea id="tplInput" dir="auto"></textarea>
+        <label id="prevLbl">תצוגה מקדימה</label>
+        <div class="bubble-wrap" aria-labelledby="prevLbl"><div id="preview" class="bubble" dir="auto"></div></div>
+      </section>
+
+      <section class="card" aria-labelledby="schedTitle">
+        <h2 id="schedTitle">תזמון</h2>
+        <div class="two">
+          <div>
+            <label for="hourInput">שעת שליחה</label>
+            <select id="hourInput"></select>
+          </div>
+          <div>
+            <label for="limitInput">מקסימום פוסטים</label>
+            <input id="limitInput" type="number" min="1" max="20" inputmode="numeric">
+          </div>
+        </div>
+        <p class="small muted" style="margin:8px 0 0">שעון ישראל. פוסטים מעבר למקסימום יישלחו בשליחה הבאה.</p>
+      </section>
+
+      <button id="saveBtn" class="btn primary" style="margin-bottom:14px"><svg class="i"><use href="#i-check"/></svg> שמירת ההגדרות</button>
+
+      <section class="card" aria-labelledby="secTitle">
+        <h2 id="secTitle">כניסה ואבטחה</h2>
+        <p id="secStatus" class="small muted" style="margin:6px 0 12px"></p>
+        <div class="stack">
+          <button id="setupPasskeyBtn" class="btn"><svg class="i"><use href="#i-finger"/></svg> הגדרת Face ID / טביעת אצבע במכשיר הזה</button>
+          <button id="logoutBtn" class="btn ghost danger"><svg class="i"><use href="#i-x"/></svg> יציאה מהמכשיר הזה</button>
+        </div>
+        <p class="small muted" style="margin:12px 0 0">
+          <a class="lnk" id="repoLink" target="_blank" rel="noopener" style="padding:0">פתיחת המאגר ב־GitHub</a>
+        </p>
+      </section>
+    </section>
   </div>
 </main>
 
-<dialog id="confirmDlg" aria-labelledby="dlgTitle">
+<nav class="tabs" id="tabs" hidden aria-label="ניווט ראשי">
+  <div class="in" role="tablist">
+    <button role="tab" id="t-home" aria-controls="tab-home" aria-selected="true"><svg class="i"><use href="#i-home"/></svg>בית</button>
+    <button role="tab" id="t-history" aria-controls="tab-history" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-list"/></svg>היסטוריה</button>
+    <button role="tab" id="t-settings" aria-controls="tab-settings" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-gear"/></svg>הגדרות</button>
+  </div>
+</nav>
+
+<dialog id="confirmDlg" aria-labelledby="dlgTitle" aria-describedby="dlgText">
   <h2 id="dlgTitle"></h2>
-  <p id="dlgText"></p>
+  <p id="dlgText" class="muted" style="margin:0"></p>
   <div class="row">
-    <button id="dlgYes" class="primary grow"></button>
-    <button id="dlgNo" class="grow">ביטול</button>
+    <button id="dlgYes" class="btn primary"></button>
+    <button id="dlgNo" class="btn">ביטול</button>
   </div>
 </dialog>
 
@@ -195,25 +337,38 @@ dialog h2 { margin-top: 0; font-size: 1.15rem; }
 <script>
 const OWNER = 'davidhershkowitz12-hash';
 const REPO = 'fb-to-telegram';
+const APP_REPO = 'vidoyim-app';
 const WF = 'daily.yml';
 const TZ = 'Asia/Jerusalem';
-const TOKEN_KEY = 'fbtg_token';
+const K_TOKEN = 'fbtg_token';      // plain token (only until a passkey is set up)
+const K_PASSKEY = 'fbtg_passkey';  // "1" when this device has a passkey entry
+const S_TOKEN = 'fbtg_session';    // token for the current session (cleared when the app closes)
 const SAMPLE = '#10137 כאן יופיע הטקסט של הפוסט מהדף.';
+const PRF_SALT = new TextEncoder().encode('vidoyim-app/vault/v1');
 
 const $ = id => document.getElementById(id);
-let token = null, cfg = null, cfgSha = null, pollTimer = null;
+let token = null, cfg = null, pollTimer = null, vaultCache;
 
-function store(get, val) {
-  try { if (get) return localStorage.getItem(TOKEN_KEY); if (val === null) localStorage.removeItem(TOKEN_KEY); else localStorage.setItem(TOKEN_KEY, val); } catch (e) { return null; }
-}
+// ---------- storage ----------
+const ls = {
+  get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+  del: k => { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const ss = {
+  get: k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} },
+  del: k => { try { sessionStorage.removeItem(k); } catch (e) {} }
+};
 
 function toast(msg, kind = 'info', ms = 4500) {
   const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + kind;
   clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', ms);
 }
 
-async function gh(path, opts = {}) {
-  const res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + path, {
+// ---------- GitHub API ----------
+async function api(repo, path, opts = {}) {
+  const res = await fetch('https://api.github.com/repos/' + OWNER + '/' + repo + path, {
     ...opts,
     headers: {
       'Authorization': 'Bearer ' + token,
@@ -229,30 +384,41 @@ async function gh(path, opts = {}) {
   }
   return res.status === 204 ? null : res.json();
 }
+const gh = (path, opts) => api(REPO, path, opts);
 
-const b64decode = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g, '')), c => c.charCodeAt(0)));
-const b64encode = s => { const b = new TextEncoder().encode(s); let bin = ''; b.forEach(x => bin += String.fromCharCode(x)); return btoa(bin); };
+const b64d = s => Uint8Array.from(atob(s.replace(/\n/g, '')), c => c.charCodeAt(0));
+const b64e = bytes => { let bin = ''; new Uint8Array(bytes).forEach(x => bin += String.fromCharCode(x)); return btoa(bin); };
+const b64uE = bytes => b64e(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64uD = s => b64d(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4));
+const utf8 = { enc: s => new TextEncoder().encode(s), dec: b => new TextDecoder().decode(b) };
 
-async function getFile(path) {
-  const f = await gh('/contents/' + path + '?ref=main&t=' + Date.now());
-  return { text: b64decode(f.content), sha: f.sha };
+async function getFile(repo, path) {
+  const f = await api(repo, '/contents/' + path + '?ref=main&t=' + Date.now());
+  return { text: utf8.dec(b64d(f.content)), sha: f.sha };
 }
-async function putFile(path, text, sha, message) {
-  return gh('/contents/' + path, { method: 'PUT', body: JSON.stringify({ message, content: b64encode(text), sha, branch: 'main' }) });
+async function putFile(repo, path, text, sha, message) {
+  const body = { message, content: b64e(utf8.enc(text)), branch: 'main' };
+  if (sha) body.sha = sha;
+  return api(repo, '/contents/' + path, { method: 'PUT', body: JSON.stringify(body) });
 }
 
-function ilParts(date) {
-  const p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
-  const o = {}; p.forEach(x => o[x.type] = x.value); return { hour: +o.hour % 24, day: o.year + o.month + o.day };
+// ---------- time ----------
+function ilNow() {
+  const p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+  const o = {}; p.forEach(x => o[x.type] = x.value); return { h: +o.hour % 24, m: +o.minute };
 }
-const fmtTime = iso => new Date(iso).toLocaleString('he-IL', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+const ilHour = d => +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false }).format(d) % 24;
+const fmtTime = iso => new Date(iso).toLocaleString('he-IL', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 const hh = h => String(h).padStart(2, '0') + ':00';
-
-function nextRunText() {
-  const now = ilParts(new Date());
-  return (now.hour < cfg.send_hour ? 'היום' : 'מחר') + ' ב־' + hh(cfg.send_hour);
+function untilText() {
+  const n = ilNow(); let mins = cfg.send_hour * 60 - (n.h * 60 + n.m); if (mins <= 0) mins += 1440;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  const hs = h === 0 ? '' : h === 1 ? 'שעה' : h === 2 ? 'שעתיים' : h + ' שעות';
+  const ms = m === 0 ? '' : m === 1 ? 'דקה' : m + ' דקות';
+  return { today: mins <= (24 * 60 - (n.h * 60 + n.m)) && (n.h < cfg.send_hour), text: 'בעוד ' + [hs, ms].filter(Boolean).join(' ו־') };
 }
 
+// ---------- dialog ----------
 function confirmBox(title, text, yes) {
   return new Promise(resolve => {
     const d = $('confirmDlg');
@@ -264,33 +430,128 @@ function confirmBox(title, text, yes) {
   });
 }
 
-// ---------- Rendering ----------
+// ---------- passkey vault (WebAuthn PRF) ----------
+// The GitHub key is encrypted with a key that only your passkey (Face ID / fingerprint) can produce.
+// The encrypted copy lives in vault.json in the public app repo, so any device with your synced passkey can unlock it.
+const rand = n => crypto.getRandomValues(new Uint8Array(n));
+const passkeysAvailable = () => !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
+
+async function loadVault(force) {
+  if (vaultCache !== undefined && !force) return vaultCache;
+  const urls = ['vault.json?t=' + Date.now(), 'https://raw.githubusercontent.com/' + OWNER + '/' + APP_REPO + '/main/vault.json?t=' + Date.now()];
+  for (const u of urls) {
+    try { const r = await fetch(u, { cache: 'no-store' }); if (r.ok) { vaultCache = await r.json(); return vaultCache; } } catch (e) {}
+  }
+  vaultCache = null; return null;
+}
+async function prfKey(prf) {
+  const base = await crypto.subtle.importKey('raw', prf, 'HKDF', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: utf8.enc('vidoyim'), info: utf8.enc('vault-key-v1') }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function getPrf(allowIds) {
+  const cred = await navigator.credentials.get({ publicKey: {
+    challenge: rand(32), rpId: location.hostname, userVerification: 'required', timeout: 60000,
+    allowCredentials: (allowIds || []).map(id => ({ type: 'public-key', id: typeof id === 'string' ? b64uD(id) : id })),
+    extensions: { prf: { eval: { first: PRF_SALT } } }
+  } });
+  const prf = cred.getClientExtensionResults().prf?.results?.first;
+  return { cred, prf };
+}
+
+async function setupPasskey() {
+  if (!passkeysAvailable()) { toast('הדפדפן הזה לא תומך בכניסה ביומטרית', 'err', 7000); return; }
+  const btns = [$('setupPasskeyBtn'), $('bannerSetupBtn')]; btns.forEach(b => b.disabled = true);
+  try {
+    const cred = await navigator.credentials.create({ publicKey: {
+      rp: { name: 'ניהול וידויים', id: location.hostname },
+      user: { id: rand(16), name: 'vidoyim-admin', displayName: 'ניהול וידויים' },
+      challenge: rand(32), timeout: 60000,
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
+      extensions: { prf: { eval: { first: PRF_SALT } } }
+    } });
+    const ext = cred.getClientExtensionResults();
+    if (ext.prf && ext.prf.enabled === false) throw Object.assign(new Error('noprf'), { code: 'noprf' });
+    let prf = ext.prf?.results?.first;
+    if (!prf) prf = (await getPrf([cred.rawId])).prf;
+    if (!prf) throw Object.assign(new Error('noprf'), { code: 'noprf' });
+    const iv = rand(12);
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await prfKey(prf), utf8.enc(token));
+    const entry = { id: b64uE(cred.rawId), iv: b64e(iv), ct: b64e(ct), device: deviceName(), created: new Date().toISOString() };
+    let vault = { v: 1, entries: [] }, sha;
+    try { const f = await getFile(APP_REPO, 'vault.json'); vault = JSON.parse(f.text); sha = f.sha; } catch (e) { if (e.status !== 404) throw e; }
+    vault.entries = (vault.entries || []).concat(entry);
+    await putFile(APP_REPO, 'vault.json', JSON.stringify(vault, null, 2) + '\n', sha, 'Add passkey for ' + entry.device);
+    vaultCache = vault;
+    ls.set(K_PASSKEY, '1'); ls.del(K_TOKEN); ss.set(S_TOKEN, token);
+    toast('מעכשיו נכנסים עם Face ID / טביעת אצבע. המפתח לא שמור יותר במכשיר בגלוי.', 'ok', 7000);
+    renderSecurity();
+  } catch (e) {
+    if (e.code === 'noprf') toast('המכשיר או הדפדפן הזה לא תומכים בהצפנה עם Face ID. אפשר להמשיך להיכנס עם המפתח.', 'err', 8000);
+    else if (e.status === 404 || e.status === 403) toast('למפתח אין הרשאה למאגר vidoyim-app. צריך ליצור מפתח שמסמן את שני המאגרים.', 'err', 9000);
+    else if (e.name === 'NotAllowedError') toast('ההגדרה בוטלה', 'info');
+    else toast('ההגדרה נכשלה: ' + e.message, 'err', 8000);
+  } finally { btns.forEach(b => b.disabled = false); }
+}
+
+async function passkeyLogin() {
+  const btn = $('passkeyLoginBtn'); btn.disabled = true;
+  try {
+    const vault = await loadVault(true);
+    if (!vault?.entries?.length) { toast('עדיין לא הוגדרה כניסה ביומטרית', 'err'); return; }
+    const { cred, prf } = await getPrf(vault.entries.map(e => e.id));
+    if (!prf) { toast('המכשיר הזה לא תומך בפתיחה עם Face ID. היכנס עם מפתח הגישה.', 'err', 8000); return; }
+    const entry = vault.entries.find(e => e.id === b64uE(cred.rawId));
+    if (!entry) { toast('המפתח הביומטרי הזה לא מוכר', 'err'); return; }
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(entry.iv) }, await prfKey(prf), b64d(entry.ct));
+    token = utf8.dec(pt);
+    ss.set(S_TOKEN, token); ls.set(K_PASSKEY, '1');
+    showApp();
+  } catch (e) {
+    if (e.name === 'NotAllowedError') toast('הכניסה בוטלה', 'info');
+    else toast('הכניסה נכשלה: ' + e.message, 'err', 7000);
+  } finally { btn.disabled = false; }
+}
+
+function deviceName() {
+  const ua = navigator.userAgent;
+  if (/iPhone/.test(ua)) return 'iPhone'; if (/iPad/.test(ua)) return 'iPad'; if (/Android/.test(ua)) return 'Android';
+  if (/Mac/.test(ua)) return 'Mac'; if (/Windows/.test(ua)) return 'Windows'; return 'מכשיר';
+}
+
+// ---------- rendering ----------
 function renderPreview() {
   const tpl = $('tplInput').value;
-  $('preview').textContent = tpl.includes('{{message}}') ? tpl.replace('{{message}}', SAMPLE) : tpl + '\n\n⚠️ חסר {{message}}: הפוסט עצמו לא יופיע בהודעה';
+  $('preview').textContent = tpl.includes('{{message}}') ? tpl.replace('{{message}}', SAMPLE) : tpl + '\n\n⚠️ חסר {{message}}: הפוסט עצמו לא יופיע';
 }
 
 function runKind(r) {
-  if (r.event === 'schedule') return ilParts(new Date(r.run_started_at || r.created_at)).hour === cfg.send_hour ? 'מתוזמנת' : null;
-  if (/בדיקה/.test(r.display_title)) return 'בדיקה';
-  return 'ידנית';
+  if (r.event === 'schedule') return ilHour(new Date(r.run_started_at || r.created_at)) === cfg.send_hour ? 'שליחה מתוזמנת' : null;
+  if (/בדיקה/.test(r.display_title)) return 'בדיקה בלי שליחה';
+  return 'שליחה ידנית';
+}
+
+function li(icon, cls, title, sub, linkHref, linkText) {
+  const el = document.createElement('li');
+  el.innerHTML = '<span class="li-ic ' + cls + '" aria-hidden="true"><svg class="i"><use href="#' + icon + '"/></svg></span>' +
+    '<div class="li-main"><div class="t"></div><div class="s"></div></div>' +
+    (linkHref ? '<a class="lnk small" target="_blank" rel="noopener"></a>' : '');
+  el.querySelector('.t').textContent = title; el.querySelector('.s').textContent = sub;
+  if (linkHref) { const a = el.querySelector('a'); a.href = linkHref; a.textContent = linkText; a.setAttribute('aria-label', linkText + ': ' + title); }
+  return el;
 }
 
 function renderRuns(runs) {
   const ul = $('runsList'); ul.innerHTML = '';
-  const shown = runs.map(r => ({ r, kind: runKind(r) })).filter(x => x.kind).slice(0, 8);
-  if (!shown.length) { ul.innerHTML = '<li class="muted">אין עדיין הרצות</li>'; return false; }
+  const shown = runs.map(r => ({ r, kind: runKind(r) })).filter(x => x.kind).slice(0, 15);
+  if (!shown.length) { ul.innerHTML = '<li class="empty">אין עדיין הרצות</li>'; return false; }
   let active = false;
   for (const { r, kind } of shown) {
-    const li = document.createElement('li');
-    let badge;
-    if (r.status !== 'completed') { badge = '<span class="badge run">רצה…</span>'; active = true; }
-    else if (r.conclusion === 'success') badge = '<span class="badge ok">הצליחה</span>';
-    else badge = '<span class="badge err">נכשלה</span>';
-    li.innerHTML = '<div><div>' + kind + '</div><div class="small muted">' + fmtTime(r.created_at) + '</div></div>' +
-      '<div style="display:flex;gap:10px;align-items:center">' + badge +
-      '<a class="link small" target="_blank" rel="noopener" href="' + r.html_url + '">פרטים</a></div>';
-    ul.appendChild(li);
+    let icon, cls, state;
+    if (r.status !== 'completed') { icon = 'i-clock'; cls = 'run'; state = 'רצה עכשיו…'; active = true; }
+    else if (r.conclusion === 'success') { icon = 'i-check'; cls = 'ok'; state = 'הצליחה'; }
+    else { icon = 'i-x'; cls = 'err'; state = 'נכשלה'; }
+    ul.appendChild(li(icon, cls, kind + ' · ' + state, fmtTime(r.created_at), r.html_url, 'פרטים'));
   }
   return active;
 }
@@ -298,51 +559,59 @@ function renderRuns(runs) {
 function renderSent(state) {
   const ul = $('sentList'); ul.innerHTML = '';
   const ids = (state.seen_ids || []).slice(-5).reverse();
-  $('lastSent').textContent = state.last_time ? 'הפוסט האחרון שנשלח פורסם ב־' + fmtTime(state.last_time.replace('+0000', 'Z')) : '';
-  if (!ids.length) { ul.innerHTML = '<li class="muted">עוד לא נשלחו פוסטים</li>'; return; }
-  ids.forEach((id, i) => {
-    const li = document.createElement('li');
-    li.innerHTML = '<span>פוסט ' + (i === 0 ? '(האחרון)' : '') + '</span><a class="link small" target="_blank" rel="noopener" href="https://www.facebook.com/' + id + '">פתיחה בפייסבוק</a>';
-    ul.appendChild(li);
-  });
+  $('lastSent').textContent = state.last_time ? 'הפוסט האחרון שנשלח פורסם ' + fmtTime(state.last_time.replace('+0000', 'Z')) : '';
+  if (!ids.length) { ul.innerHTML = '<li class="empty">עוד לא נשלחו פוסטים</li>'; return; }
+  ids.forEach((id, i) => ul.appendChild(li('i-fb', '', i === 0 ? 'הפוסט האחרון' : 'פוסט קודם (' + (i + 1) + ')', 'נשלח לערוץ בטלגרם', 'https://www.facebook.com/' + id, 'פתיחה')));
 }
 
 function renderStatus(wf) {
   const on = wf.state === 'active';
-  $('statusDot').className = 'dot ' + (on ? 'on' : 'off');
+  $('statusPill').classList.toggle('off', !on);
   $('statusText').textContent = on ? 'האוטומציה פעילה' : 'האוטומציה מושהית';
-  $('nextText').textContent = on ? 'השליחה הבאה: ' + nextRunText() : 'לא יישלחו פוסטים עד שתפעיל מחדש';
-  $('toggleBtn').textContent = on ? 'השהיית האוטומציה' : 'הפעלת האוטומציה';
+  if (on) {
+    const u = untilText();
+    $('nextLbl').textContent = 'השליחה הבאה';
+    $('nextBig').textContent = (u.today ? 'היום' : 'מחר') + ' ב־' + hh(cfg.send_hour);
+    $('nextIn').textContent = u.text;
+  } else {
+    $('nextLbl').textContent = 'מושהה';
+    $('nextBig').textContent = 'אין שליחות';
+    $('nextIn').textContent = 'לחץ "הפעלה" כדי לחזור לשליחה היומית';
+  }
+  $('toggleTxt').textContent = on ? 'השהיה' : 'הפעלה';
+  $('toggleIc').innerHTML = '<use href="#' + (on ? 'i-pause' : 'i-play') + '"/>';
   $('toggleBtn').dataset.on = on ? '1' : '';
+}
+
+function renderSecurity() {
+  const has = ls.get(K_PASSKEY) === '1';
+  $('secStatus').textContent = has
+    ? 'במכשיר הזה נכנסים עם Face ID / טביעת אצבע. המפתח שמור רק בצורה מוצפנת.'
+    : (passkeysAvailable() ? 'במכשיר הזה המפתח שמור כרגע בדפדפן. מומלץ להגדיר כניסה ביומטרית.' : 'הדפדפן הזה לא תומך בכניסה ביומטרית.');
+  $('setupPasskeyBtn').hidden = has || !passkeysAvailable();
+  $('passkeyBanner').hidden = has || !passkeysAvailable();
 }
 
 async function loadAll(quiet) {
   try {
     const [wf, runs, state, conf] = await Promise.all([
       gh('/actions/workflows/' + WF),
-      gh('/actions/workflows/' + WF + '/runs?per_page=20'),
-      getFile('state.json').then(f => JSON.parse(f.text)).catch(() => ({})),
-      getFile('config.json')
+      gh('/actions/workflows/' + WF + '/runs?per_page=30'),
+      getFile(REPO, 'state.json').then(f => JSON.parse(f.text)).catch(() => ({})),
+      getFile(REPO, 'config.json')
     ]);
-    const newCfg = JSON.parse(conf.text);
-    const firstLoad = !cfg;
-    cfg = newCfg; cfgSha = conf.sha;
-    if (firstLoad) fillSettings();
-    renderStatus(wf);
-    renderSent(state);
-    const active = renderRuns(runs.workflow_runs || []);
-    schedulePoll(active);
-    if (!quiet) toast('עודכן', 'info', 1500);
+    const first = !cfg;
+    cfg = JSON.parse(conf.text);
+    if (first) fillSettings();
+    renderStatus(wf); renderSent(state); renderSecurity();
+    schedulePoll(renderRuns(runs.workflow_runs || []));
+    if (!quiet) toast('הנתונים עודכנו', 'info', 1500);
   } catch (e) {
-    if (e.status === 401) { toast('המפתח לא תקין או שפג תוקפו. צריך להתחבר מחדש.', 'err', 7000); logout(); return; }
+    if (e.status === 401) { toast('המפתח לא תקין או שפג תוקפו. צריך להיכנס מחדש.', 'err', 8000); logout(true); return; }
     toast('שגיאה בטעינה: ' + e.message, 'err', 7000);
   }
 }
-
-function schedulePoll(active) {
-  clearTimeout(pollTimer);
-  if (active) pollTimer = setTimeout(() => loadAll(true), 6000);
-}
+function schedulePoll(active) { clearTimeout(pollTimer); pollTimer = setTimeout(() => loadAll(true), active ? 6000 : 60000); }
 
 function fillSettings() {
   $('tplInput').value = cfg.template;
@@ -353,24 +622,24 @@ function fillSettings() {
   renderPreview();
 }
 
-// ---------- Actions ----------
+// ---------- actions ----------
 async function dispatch(dry) {
   const ok = await confirmBox(
     dry ? 'בדיקה בלי שליחה' : 'לשלוח עכשיו?',
-    dry ? 'ההרצה תבדוק אילו פוסטים חדשים יש ותציג אותם ביומן ההרצה. שום דבר לא יישלח.'
+    dry ? 'ההרצה תבדוק אילו פוסטים חדשים יש ותציג אותם ביומן ההרצה. שום דבר לא יישלח לטלגרם.'
         : 'כל הפוסטים החדשים שעוד לא נשלחו (עד ' + cfg.limit + ') יישלחו עכשיו לערוץ בטלגרם.',
     dry ? 'להריץ בדיקה' : 'כן, לשלוח');
   if (!ok) return;
   try {
     await gh('/actions/workflows/' + WF + '/dispatches', { method: 'POST', body: JSON.stringify({ ref: 'main', inputs: { dry_run: dry ? 'true' : 'false' } }) });
-    toast(dry ? 'הבדיקה התחילה. התוצאה תופיע ברשימה בעוד כחצי דקה.' : 'השליחה התחילה. הפוסטים יגיעו לטלגרם בעוד כחצי דקה.', 'ok', 6000);
+    toast(dry ? 'הבדיקה התחילה. התוצאה תופיע בהיסטוריה בעוד כחצי דקה.' : 'השליחה התחילה. הפוסטים יגיעו לטלגרם בעוד כחצי דקה.', 'ok', 6000);
     setTimeout(() => loadAll(true), 4000);
   } catch (e) { toast('לא הצלחתי להפעיל: ' + e.message, 'err', 7000); }
 }
 
 async function toggle() {
   const on = !!$('toggleBtn').dataset.on;
-  if (on && !(await confirmBox('להשהות את האוטומציה?', 'עד שתפעיל מחדש, לא יישלחו פוסטים בשעה הקבועה. פוסטים שיעלו בינתיים יישלחו כשתפעיל שוב (עד ' + cfg.limit + ' בכל פעם).', 'כן, להשהות'))) return;
+  if (on && !(await confirmBox('להשהות את האוטומציה?', 'עד שתפעיל מחדש לא יישלחו פוסטים בשעה הקבועה. פוסטים שיעלו בינתיים יישלחו כשתפעיל שוב (עד ' + cfg.limit + ' בכל פעם).', 'כן, להשהות'))) return;
   try {
     await gh('/actions/workflows/' + WF + '/' + (on ? 'disable' : 'enable'), { method: 'PUT' });
     toast(on ? 'האוטומציה הושהתה' : 'האוטומציה פעילה שוב', 'ok');
@@ -384,69 +653,99 @@ async function saveSettings() {
   const send_hour = parseInt($('hourInput').value, 10);
   if (!template.includes('{{message}}')) { toast('הנוסח חייב לכלול {{message}}', 'err'); $('tplInput').focus(); return; }
   if (!(limit >= 1 && limit <= 20)) { toast('מספר הפוסטים צריך להיות בין 1 ל־20', 'err'); $('limitInput').focus(); return; }
-  const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'שומר…';
+  const btn = $('saveBtn'); btn.disabled = true;
   try {
     const hourChanged = send_hour !== cfg.send_hour;
-    const fresh = await getFile('config.json');
+    const fresh = await getFile(REPO, 'config.json');
     const newCfg = { ...JSON.parse(fresh.text), template, limit, send_hour };
-    await putFile('config.json', JSON.stringify(newCfg, null, 2) + '\n', fresh.sha, 'Update settings from app');
+    await putFile(REPO, 'config.json', JSON.stringify(newCfg, null, 2) + '\n', fresh.sha, 'Update settings from app');
     if (hourChanged) {
-      const wf = await getFile('.github/workflows/' + WF);
+      const wf = await getFile(REPO, '.github/workflows/' + WF);
       const summer = (send_hour - 3 + 24) % 24, winter = (send_hour - 2 + 24) % 24;
       let n = 0;
       const text = wf.text.replace(/- cron: "0 \d{1,2} \* \* \*"/g, () => '- cron: "0 ' + (n++ === 0 ? summer : winter) + ' * * *"');
       if (n !== 2) throw new Error('מבנה קובץ התזמון השתנה');
-      await putFile('.github/workflows/' + WF, text, wf.sha, 'Change send hour to ' + hh(send_hour));
+      await putFile(REPO, '.github/workflows/' + WF, text, wf.sha, 'Change send hour to ' + hh(send_hour));
     }
     cfg = newCfg;
-    toast('ההגדרות נשמרו' + (hourChanged ? '. מעכשיו השליחה תהיה ב־' + hh(send_hour) : ''), 'ok', 6000);
+    toast('ההגדרות נשמרו' + (hourChanged ? '. מעכשיו השליחה ב־' + hh(send_hour) : ''), 'ok', 6000);
     loadAll(true);
-  } catch (e) {
-    toast('השמירה נכשלה: ' + e.message, 'err', 8000);
-  } finally { btn.disabled = false; btn.textContent = 'שמירת ההגדרות'; }
+  } catch (e) { toast('השמירה נכשלה: ' + e.message, 'err', 8000); }
+  finally { btn.disabled = false; }
 }
 
-// ---------- Setup ----------
-function tokenUrl() {
-  const p = new URLSearchParams({
-    name: 'ניהול וידויים', description: 'Management app for fb-to-telegram',
-    target_name: OWNER, expires_in: '365', contents: 'write', actions: 'write', workflows: 'write'
+// ---------- tabs ----------
+const TABS = ['home', 'history', 'settings'];
+function selectTab(name, focus) {
+  TABS.forEach(t => {
+    const on = t === name;
+    $('t-' + t).setAttribute('aria-selected', on); $('t-' + t).tabIndex = on ? 0 : -1;
+    $('tab-' + t).hidden = !on;
   });
+  if (focus) $('t-' + name).focus();
+  window.scrollTo({ top: 0 });
+}
+TABS.forEach((t, i) => {
+  $('t-' + t).onclick = () => selectTab(t);
+  $('t-' + t).onkeydown = e => {
+    const d = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0; // RTL
+    if (d) { e.preventDefault(); selectTab(TABS[(i + d + TABS.length) % TABS.length], true); }
+  };
+});
+
+// ---------- login ----------
+function tokenUrl() {
+  const p = new URLSearchParams({ name: 'ניהול וידויים', description: 'Management app for fb-to-telegram', target_name: OWNER, expires_in: '365', contents: 'write', actions: 'write', workflows: 'write' });
   return 'https://github.com/settings/personal-access-tokens/new?' + p.toString();
 }
-
-async function connect() {
+async function tokenLogin() {
   const v = $('tokenInput').value.trim();
-  if (!v) { toast('צריך להדביק את המפתח', 'err'); return; }
+  if (!v) { toast('צריך להדביק את המפתח', 'err'); $('tokenInput').focus(); return; }
   token = v;
   try {
     await gh('/actions/workflows/' + WF);
-    store(false, v); $('tokenInput').value = '';
-    showDash();
+    ls.set(K_TOKEN, v); ss.set(S_TOKEN, v); $('tokenInput').value = '';
+    showApp();
   } catch (e) {
     token = null;
-    toast(e.status === 404 ? 'למפתח אין גישה למאגר fb-to-telegram. צריך לבחור אותו ב־Repository access.' : 'המפתח לא עובד: ' + e.message, 'err', 8000);
+    toast(e.status === 404 ? 'למפתח אין גישה למאגר fb-to-telegram. צריך לסמן אותו ב־Repository access.' : 'המפתח לא עובד: ' + e.message, 'err', 9000);
   }
 }
+function logout(keepPasskey) {
+  ls.del(K_TOKEN); ss.del(S_TOKEN); if (!keepPasskey) ls.del(K_PASSKEY);
+  token = null; cfg = null; clearTimeout(pollTimer); showLogin();
+}
+async function showLogin() {
+  $('app').hidden = true; $('tabs').hidden = true; $('login').hidden = false;
+  $('tokenLink').href = tokenUrl();
+  const vault = passkeysAvailable() ? await loadVault() : null;
+  const canPasskey = !!(vault && vault.entries && vault.entries.length);
+  $('passkeyLoginBtn').hidden = !canPasskey;
+  $('tokDetails').open = !canPasskey;
+  $('tokDetails').querySelector('summary').textContent = canPasskey ? 'או: כניסה עם מפתח גישה' : 'כניסה ראשונה עם מפתח גישה';
+}
+function showApp() {
+  $('login').hidden = true; $('app').hidden = false; $('tabs').hidden = false;
+  $('repoLink').href = 'https://github.com/' + OWNER + '/' + REPO;
+  selectTab('home'); loadAll(true);
+}
 
-function logout() { store(false, null); token = null; cfg = null; clearTimeout(pollTimer); showSetup(); }
-
-function showSetup() { $('dash').hidden = true; $('refreshBtn').hidden = true; $('setup').hidden = false; $('tokenLink').href = tokenUrl(); }
-function showDash() { $('setup').hidden = true; $('dash').hidden = false; $('refreshBtn').hidden = false; $('repoLink').href = 'https://github.com/' + OWNER + '/' + REPO; loadAll(true); }
-
-$('connectBtn').onclick = connect;
-$('tokenInput').onkeydown = e => { if (e.key === 'Enter') connect(); };
+$('connectBtn').onclick = tokenLogin;
+$('tokenInput').onkeydown = e => { if (e.key === 'Enter') tokenLogin(); };
+$('passkeyLoginBtn').onclick = passkeyLogin;
 $('sendBtn').onclick = () => dispatch(false);
 $('dryBtn').onclick = () => dispatch(true);
 $('toggleBtn').onclick = toggle;
 $('saveBtn').onclick = saveSettings;
 $('tplInput').oninput = renderPreview;
 $('refreshBtn').onclick = () => loadAll(false);
-$('logoutBtn').onclick = logout;
+$('setupPasskeyBtn').onclick = setupPasskey;
+$('bannerSetupBtn').onclick = setupPasskey;
+$('logoutBtn').onclick = async () => { if (await confirmBox('לצאת מהמכשיר הזה?', 'בפעם הבאה תצטרך להיכנס שוב, עם Face ID או עם מפתח הגישה.', 'יציאה')) logout(true); };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && token) loadAll(true); });
 
-token = store(true);
-token ? showDash() : showSetup();
+token = ss.get(S_TOKEN) || ls.get(K_TOKEN);
+token ? showApp() : showLogin();
 </script>
 </body>
 </html>
