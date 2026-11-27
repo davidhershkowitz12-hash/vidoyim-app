@@ -115,6 +115,7 @@ dialog h2 { margin-top: 0; font-size: 1.15rem; }
     <p>כדי שהאפליקציה תוכל לנהל את האוטומציה, צריך "מפתח גישה" מ־GitHub. המפתח נשמר רק במכשיר הזה.</p>
     <ol class="steps">
       <li><a class="link" id="tokenLink" target="_blank" rel="noopener">לפתוח את דף יצירת המפתח ב־GitHub</a>. ההגדרות כבר ממולאות.</li>
+      <li>תחת <b>Repository access</b> לבחור <b>Only select repositories</b>, ואז את <b dir="ltr">fb-to-telegram</b>.</li>
       <li>לגלול למטה וללחוץ <b>Generate token</b>, ואז להעתיק את המפתח (מתחיל ב־<span dir="ltr">github_pat_</span>).</li>
       <li>להדביק אותו כאן:</li>
     </ol>
@@ -409,7 +410,7 @@ async function saveSettings() {
 function tokenUrl() {
   const p = new URLSearchParams({
     name: 'ניהול וידויים', description: 'Management app for fb-to-telegram',
-    target_name: OWNER, expires_in: '366', contents: 'write', actions: 'write', workflows: 'write'
+    target_name: OWNER, expires_in: '365', contents: 'write', actions: 'write', workflows: 'write'
   });
   return 'https://github.com/settings/personal-access-tokens/new?' + p.toString();
 }
