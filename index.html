@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ניהול וידויים</title>
+<meta name="description" content="ניהול האוטומציה ששולחת את הפוסטים מדף הפייסבוק לערוץ הטלגרם">
+<meta name="theme-color" content="#1d6fd8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+:root {
+  --bg: #f4f6fa; --surface: #ffffff; --surface-2: #eef2f8; --text: #13202f; --muted: #5b6b7f;
+  --border: #d9e0ea; --accent: #1d6fd8; --accent-text: #ffffff; --ok: #187a3e; --ok-bg: #e3f4ea;
+  --warn: #9a5b00; --warn-bg: #fff2d9; --err: #b42318; --err-bg: #fde8e6; --bubble: #e8f3ff;
+  --focus: #ffb800; --radius: 14px; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1621; --surface: #17212f; --surface-2: #1e2a3a; --text: #e8eef6; --muted: #9aabbf;
+    --border: #2b3a4e; --accent: #4c95f0; --accent-text: #08111c; --ok: #5fd08c; --ok-bg: #133524;
+    --warn: #f3b552; --warn-bg: #3a2a0e; --err: #ff8a80; --err-bg: #3d1714; --bubble: #1b3350;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1621; --surface: #17212f; --surface-2: #1e2a3a; --text: #e8eef6; --muted: #9aabbf;
+  --border: #2b3a4e; --accent: #4c95f0; --accent-text: #08111c; --ok: #5fd08c; --ok-bg: #133524;
+  --warn: #f3b552; --warn-bg: #3a2a0e; --err: #ff8a80; --err-bg: #3d1714; --bubble: #1b3350;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Rubik, Arial, sans-serif;
+}
+main { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 16px; }
+header.top h1 { font-size: 1.35rem; margin: 0; line-height: 1.25; }
+header.top p { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; margin-bottom: 14px; }
+.card h2 { font-size: 1.05rem; margin: 0 0 12px; }
+.status { display: flex; align-items: center; gap: 14px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; flex: none; background: var(--muted); }
+.dot.on { background: var(--ok); box-shadow: 0 0 0 5px var(--ok-bg); }
+.dot.off { background: var(--warn); box-shadow: 0 0 0 5px var(--warn-bg); }
+.status strong { font-size: 1.25rem; display: block; }
+.status span { color: var(--muted); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+button, .btn {
+  font: inherit; font-weight: 600; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); padding: 12px 16px; min-height: 48px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+}
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+button.grow { flex: 1 1 180px; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px;
+}
+.link { color: var(--accent); }
+.muted { color: var(--muted); }
+.small { font-size: .9rem; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-weight: 600; }
+ul.list { list-style: none; margin: 0; padding: 0; }
+ul.list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+ul.list li:first-child { border-top: 0; }
+.badge { font-size: .8rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.badge.ok { background: var(--ok-bg); color: var(--ok); }
+.badge.err { background: var(--err-bg); color: var(--err); }
+.badge.run { background: var(--warn-bg); color: var(--warn); }
+label { display: block; font-weight: 600; margin: 14px 0 6px; }
+.hint { display: block; font-weight: 400; color: var(--muted); font-size: .88rem; margin-top: 2px; }
+input, textarea, select {
+  font: inherit; width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); min-height: 48px;
+}
+textarea { min-height: 150px; resize: vertical; line-height: 1.5; }
+input[dir="ltr"] { text-align: left; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bubble { background: var(--bubble); border-radius: 14px 14px 4px 14px; padding: 12px 14px; white-space: pre-wrap; word-break: break-word; font-size: .95rem; }
+.toast { position: fixed; inset-inline: 16px; bottom: 16px; max-width: 608px; margin: 0 auto; padding: 14px 16px; border-radius: 12px; font-weight: 600; box-shadow: 0 6px 24px rgba(0,0,0,.2); display: none; z-index: 10; }
+.toast.show { display: block; }
+.toast.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok); }
+.toast.err { background: var(--err-bg); color: var(--err); border: 1px solid var(--err); }
+.toast.info { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+ol.steps { padding-inline-start: 20px; margin: 8px 0 0; }
+ol.steps li { margin-bottom: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+dialog { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 20px; max-width: min(440px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog h2 { margin-top: 0; font-size: 1.15rem; }
+[hidden] { display: none !important; }
+@media (max-width: 420px) { .two { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: no-preference) { button { transition: filter .15s; } button:hover:not(:disabled) { filter: brightness(1.06); } }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div>
+      <h1>וידויים של דוסים</h1>
+      <p>פייסבוק ← טלגרם, כל יום אוטומטית</p>
+    </div>
+    <button id="refreshBtn" aria-label="רענון" title="רענון" hidden>⟳</button>
+  </header>
+
+  <!-- Setup -->
+  <section id="setup" class="card" hidden aria-labelledby="setupTitle">
+    <h2 id="setupTitle">חיבור חד־פעמי</h2>
+    <p>כדי שהאפליקציה תוכל לנהל את האוטומציה, צריך "מפתח גישה" מ־GitHub. המפתח נשמר רק במכשיר הזה.</p>
+    <ol class="steps">
+      <li><a class="link" id="tokenLink" target="_blank" rel="noopener">לפתוח את דף יצירת המפתח ב־GitHub</a>. ההגדרות כבר ממולאות.</li>
+      <li>לגלול למטה וללחוץ <b>Generate token</b>, ואז להעתיק את המפתח (מתחיל ב־<span dir="ltr">github_pat_</span>).</li>
+      <li>להדביק אותו כאן:</li>
+    </ol>
+    <label for="tokenInput">מפתח גישה</label>
+    <input id="tokenInput" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="github_pat_...">
+    <div class="row"><button id="connectBtn" class="primary grow">התחברות</button></div>
+  </section>
+
+  <!-- Dashboard -->
+  <div id="dash" hidden>
+    <section class="card" aria-labelledby="statusTitle">
+      <h2 id="statusTitle" class="sr-only">מצב האוטומציה</h2>
+      <div class="status">
+        <span id="statusDot" class="dot" aria-hidden="true"></span>
+        <div>
+          <strong id="statusText">טוען…</strong>
+          <span id="nextText"></span>
+        </div>
+      </div>
+      <div class="row">
+        <button id="sendBtn" class="primary grow">שליחה עכשיו</button>
+        <button id="dryBtn" class="grow">בדיקה בלי שליחה</button>
+      </div>
+      <div class="row"><button id="toggleBtn" class="grow">השהיה</button></div>
+    </section>
+
+    <section class="card" aria-labelledby="sentTitle">
+      <h2 id="sentTitle">נשלחו לאחרונה</h2>
+      <p id="lastSent" class="muted small"></p>
+      <ul id="sentList" class="list"></ul>
+    </section>
+
+    <section class="card" aria-labelledby="runsTitle">
+      <h2 id="runsTitle">הרצות אחרונות</h2>
+      <ul id="runsList" class="list" aria-live="polite"></ul>
+    </section>
+
+    <section class="card" aria-labelledby="setTitle">
+      <h2 id="setTitle">הגדרות</h2>
+      <label for="tplInput">נוסח ההודעה
+        <span class="hint"><bdi dir="ltr">{{message}}</bdi> יוחלף בטקסט של הפוסט. נשלח כטקסט רגיל, כמו במייק.</span>
+      </label>
+      <textarea id="tplInput" dir="auto"></textarea>
+      <div class="two">
+        <div>
+          <label for="hourInput">שעת שליחה (שעון ישראל)</label>
+          <select id="hourInput"></select>
+        </div>
+        <div>
+          <label for="limitInput">מקסימום פוסטים בכל שליחה</label>
+          <input id="limitInput" type="number" min="1" max="20" inputmode="numeric">
+        </div>
+      </div>
+      <label>תצוגה מקדימה</label>
+      <div id="preview" class="bubble" dir="auto"></div>
+      <div class="row"><button id="saveBtn" class="primary grow">שמירת ההגדרות</button></div>
+    </section>
+
+    <p class="small muted">
+      <a class="link" id="repoLink" target="_blank" rel="noopener">המאגר ב־GitHub</a> ·
+      <button id="logoutBtn" class="small" style="min-height:auto;padding:4px 8px;border:0;background:none;color:var(--accent);font-weight:400;text-decoration:underline">ניתוק מהמכשיר הזה</button>
+    </p>
+  </div>
+</main>
+
+<dialog id="confirmDlg" aria-labelledby="dlgTitle">
+  <h2 id="dlgTitle"></h2>
+  <p id="dlgText"></p>
+  <div class="row">
+    <button id="dlgYes" class="primary grow"></button>
+    <button id="dlgNo" class="grow">ביטול</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+const OWNER = 'davidhershkowitz12-hash';
+const REPO = 'fb-to-telegram';
+const WF = 'daily.yml';
+const TZ = 'Asia/Jerusalem';
+const TOKEN_KEY = 'fbtg_token';
+const SAMPLE = '#10137 כאן יופיע הטקסט של הפוסט מהדף.';
+
+const $ = id => document.getElementById(id);
+let token = null, cfg = null, cfgSha = null, pollTimer = null;
+
+function store(get, val) {
+  try { if (get) return localStorage.getItem(TOKEN_KEY); if (val === null) localStorage.removeItem(TOKEN_KEY); else localStorage.setItem(TOKEN_KEY, val); } catch (e) { return null; }
+}
+
+function toast(msg, kind = 'info', ms = 4500) {
+  const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + kind;
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', ms);
+}
+
+async function gh(path, opts = {}) {
+  const res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + path, {
+    ...opts,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(opts.body ? { 'Content-Type': 'application/json' } : {})
+    }
+  });
+  if (!res.ok) {
+    let msg = res.status + '';
+    try { msg += ' ' + (await res.json()).message; } catch (e) {}
+    const err = new Error(msg); err.status = res.status; throw err;
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+const b64decode = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g, '')), c => c.charCodeAt(0)));
+const b64encode = s => { const b = new TextEncoder().encode(s); let bin = ''; b.forEach(x => bin += String.fromCharCode(x)); return btoa(bin); };
+
+async function getFile(path) {
+  const f = await gh('/contents/' + path + '?ref=main&t=' + Date.now());
+  return { text: b64decode(f.content), sha: f.sha };
+}
+async function putFile(path, text, sha, message) {
+  return gh('/contents/' + path, { method: 'PUT', body: JSON.stringify({ message, content: b64encode(text), sha, branch: 'main' }) });
+}
+
+function ilParts(date) {
+  const p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
+  const o = {}; p.forEach(x => o[x.type] = x.value); return { hour: +o.hour % 24, day: o.year + o.month + o.day };
+}
+const fmtTime = iso => new Date(iso).toLocaleString('he-IL', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+const hh = h => String(h).padStart(2, '0') + ':00';
+
+function nextRunText() {
+  const now = ilParts(new Date());
+  return (now.hour < cfg.send_hour ? 'היום' : 'מחר') + ' ב־' + hh(cfg.send_hour);
+}
+
+function confirmBox(title, text, yes) {
+  return new Promise(resolve => {
+    const d = $('confirmDlg');
+    $('dlgTitle').textContent = title; $('dlgText').textContent = text; $('dlgYes').textContent = yes;
+    const done = v => { d.close(); $('dlgYes').onclick = $('dlgNo').onclick = null; resolve(v); };
+    $('dlgYes').onclick = () => done(true); $('dlgNo').onclick = () => done(false);
+    d.oncancel = e => { e.preventDefault(); done(false); };
+    d.showModal(); $('dlgNo').focus();
+  });
+}
+
+// ---------- Rendering ----------
+function renderPreview() {
+  const tpl = $('tplInput').value;
+  $('preview').textContent = tpl.includes('{{message}}') ? tpl.replace('{{message}}', SAMPLE) : tpl + '\n\n⚠️ חסר {{message}}: הפוסט עצמו לא יופיע בהודעה';
+}
+
+function runKind(r) {
+  if (r.event === 'schedule') return ilParts(new Date(r.run_started_at || r.created_at)).hour === cfg.send_hour ? 'מתוזמנת' : null;
+  if (/בדיקה/.test(r.display_title)) return 'בדיקה';
+  return 'ידנית';
+}
+
+function renderRuns(runs) {
+  const ul = $('runsList'); ul.innerHTML = '';
+  const shown = runs.map(r => ({ r, kind: runKind(r) })).filter(x => x.kind).slice(0, 8);
+  if (!shown.length) { ul.innerHTML = '<li class="muted">אין עדיין הרצות</li>'; return false; }
+  let active = false;
+  for (const { r, kind } of shown) {
+    const li = document.createElement('li');
+    let badge;
+    if (r.status !== 'completed') { badge = '<span class="badge run">רצה…</span>'; active = true; }
+    else if (r.conclusion === 'success') badge = '<span class="badge ok">הצליחה</span>';
+    else badge = '<span class="badge err">נכשלה</span>';
+    li.innerHTML = '<div><div>' + kind + '</div><div class="small muted">' + fmtTime(r.created_at) + '</div></div>' +
+      '<div style="display:flex;gap:10px;align-items:center">' + badge +
+      '<a class="link small" target="_blank" rel="noopener" href="' + r.html_url + '">פרטים</a></div>';
+    ul.appendChild(li);
+  }
+  return active;
+}
+
+function renderSent(state) {
+  const ul = $('sentList'); ul.innerHTML = '';
+  const ids = (state.seen_ids || []).slice(-5).reverse();
+  $('lastSent').textContent = state.last_time ? 'הפוסט האחרון שנשלח פורסם ב־' + fmtTime(state.last_time.replace('+0000', 'Z')) : '';
+  if (!ids.length) { ul.innerHTML = '<li class="muted">עוד לא נשלחו פוסטים</li>'; return; }
+  ids.forEach((id, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<span>פוסט ' + (i === 0 ? '(האחרון)' : '') + '</span><a class="link small" target="_blank" rel="noopener" href="https://www.facebook.com/' + id + '">פתיחה בפייסבוק</a>';
+    ul.appendChild(li);
+  });
+}
+
+function renderStatus(wf) {
+  const on = wf.state === 'active';
+  $('statusDot').className = 'dot ' + (on ? 'on' : 'off');
+  $('statusText').textContent = on ? 'האוטומציה פעילה' : 'האוטומציה מושהית';
+  $('nextText').textContent = on ? 'השליחה הבאה: ' + nextRunText() : 'לא יישלחו פוסטים עד שתפעיל מחדש';
+  $('toggleBtn').textContent = on ? 'השהיית האוטומציה' : 'הפעלת האוטומציה';
+  $('toggleBtn').dataset.on = on ? '1' : '';
+}
+
+async function loadAll(quiet) {
+  try {
+    const [wf, runs, state, conf] = await Promise.all([
+      gh('/actions/workflows/' + WF),
+      gh('/actions/workflows/' + WF + '/runs?per_page=20'),
+      getFile('state.json').then(f => JSON.parse(f.text)).catch(() => ({})),
+      getFile('config.json')
+    ]);
+    const newCfg = JSON.parse(conf.text);
+    const firstLoad = !cfg;
+    cfg = newCfg; cfgSha = conf.sha;
+    if (firstLoad) fillSettings();
+    renderStatus(wf);
+    renderSent(state);
+    const active = renderRuns(runs.workflow_runs || []);
+    schedulePoll(active);
+    if (!quiet) toast('עודכן', 'info', 1500);
+  } catch (e) {
+    if (e.status === 401) { toast('המפתח לא תקין או שפג תוקפו. צריך להתחבר מחדש.', 'err', 7000); logout(); return; }
+    toast('שגיאה בטעינה: ' + e.message, 'err', 7000);
+  }
+}
+
+function schedulePoll(active) {
+  clearTimeout(pollTimer);
+  if (active) pollTimer = setTimeout(() => loadAll(true), 6000);
+}
+
+function fillSettings() {
+  $('tplInput').value = cfg.template;
+  $('limitInput').value = cfg.limit;
+  const sel = $('hourInput'); sel.innerHTML = '';
+  for (let h = 0; h < 24; h++) { const o = document.createElement('option'); o.value = h; o.textContent = hh(h); sel.appendChild(o); }
+  sel.value = cfg.send_hour;
+  renderPreview();
+}
+
+// ---------- Actions ----------
+async function dispatch(dry) {
+  const ok = await confirmBox(
+    dry ? 'בדיקה בלי שליחה' : 'לשלוח עכשיו?',
+    dry ? 'ההרצה תבדוק אילו פוסטים חדשים יש ותציג אותם ביומן ההרצה. שום דבר לא יישלח.'
+        : 'כל הפוסטים החדשים שעוד לא נשלחו (עד ' + cfg.limit + ') יישלחו עכשיו לערוץ בטלגרם.',
+    dry ? 'להריץ בדיקה' : 'כן, לשלוח');
+  if (!ok) return;
+  try {
+    await gh('/actions/workflows/' + WF + '/dispatches', { method: 'POST', body: JSON.stringify({ ref: 'main', inputs: { dry_run: dry ? 'true' : 'false' } }) });
+    toast(dry ? 'הבדיקה התחילה. התוצאה תופיע ברשימה בעוד כחצי דקה.' : 'השליחה התחילה. הפוסטים יגיעו לטלגרם בעוד כחצי דקה.', 'ok', 6000);
+    setTimeout(() => loadAll(true), 4000);
+  } catch (e) { toast('לא הצלחתי להפעיל: ' + e.message, 'err', 7000); }
+}
+
+async function toggle() {
+  const on = !!$('toggleBtn').dataset.on;
+  if (on && !(await confirmBox('להשהות את האוטומציה?', 'עד שתפעיל מחדש, לא יישלחו פוסטים בשעה הקבועה. פוסטים שיעלו בינתיים יישלחו כשתפעיל שוב (עד ' + cfg.limit + ' בכל פעם).', 'כן, להשהות'))) return;
+  try {
+    await gh('/actions/workflows/' + WF + '/' + (on ? 'disable' : 'enable'), { method: 'PUT' });
+    toast(on ? 'האוטומציה הושהתה' : 'האוטומציה פעילה שוב', 'ok');
+    loadAll(true);
+  } catch (e) { toast('שגיאה: ' + e.message, 'err', 7000); }
+}
+
+async function saveSettings() {
+  const template = $('tplInput').value.replace(/\r\n/g, '\n');
+  const limit = parseInt($('limitInput').value, 10);
+  const send_hour = parseInt($('hourInput').value, 10);
+  if (!template.includes('{{message}}')) { toast('הנוסח חייב לכלול {{message}}', 'err'); $('tplInput').focus(); return; }
+  if (!(limit >= 1 && limit <= 20)) { toast('מספר הפוסטים צריך להיות בין 1 ל־20', 'err'); $('limitInput').focus(); return; }
+  const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'שומר…';
+  try {
+    const hourChanged = send_hour !== cfg.send_hour;
+    const fresh = await getFile('config.json');
+    const newCfg = { ...JSON.parse(fresh.text), template, limit, send_hour };
+    await putFile('config.json', JSON.stringify(newCfg, null, 2) + '\n', fresh.sha, 'Update settings from app');
+    if (hourChanged) {
+      const wf = await getFile('.github/workflows/' + WF);
+      const summer = (send_hour - 3 + 24) % 24, winter = (send_hour - 2 + 24) % 24;
+      let n = 0;
+      const text = wf.text.replace(/- cron: "0 \d{1,2} \* \* \*"/g, () => '- cron: "0 ' + (n++ === 0 ? summer : winter) + ' * * *"');
+      if (n !== 2) throw new Error('מבנה קובץ התזמון השתנה');
+      await putFile('.github/workflows/' + WF, text, wf.sha, 'Change send hour to ' + hh(send_hour));
+    }
+    cfg = newCfg;
+    toast('ההגדרות נשמרו' + (hourChanged ? '. מעכשיו השליחה תהיה ב־' + hh(send_hour) : ''), 'ok', 6000);
+    loadAll(true);
+  } catch (e) {
+    toast('השמירה נכשלה: ' + e.message, 'err', 8000);
+  } finally { btn.disabled = false; btn.textContent = 'שמירת ההגדרות'; }
+}
+
+// ---------- Setup ----------
+function tokenUrl() {
+  const p = new URLSearchParams({
+    name: 'ניהול וידויים', description: 'Management app for fb-to-telegram',
+    target_name: OWNER, expires_in: '366', contents: 'write', actions: 'write', workflows: 'write'
+  });
+  return 'https://github.com/settings/personal-access-tokens/new?' + p.toString();
+}
+
+async function connect() {
+  const v = $('tokenInput').value.trim();
+  if (!v) { toast('צריך להדביק את המפתח', 'err'); return; }
+  token = v;
+  try {
+    await gh('/actions/workflows/' + WF);
+    store(false, v); $('tokenInput').value = '';
+    showDash();
+  } catch (e) {
+    token = null;
+    toast(e.status === 404 ? 'למפתח אין גישה למאגר fb-to-telegram. צריך לבחור אותו ב־Repository access.' : 'המפתח לא עובד: ' + e.message, 'err', 8000);
+  }
+}
+
+function logout() { store(false, null); token = null; cfg = null; clearTimeout(pollTimer); showSetup(); }
+
+function showSetup() { $('dash').hidden = true; $('refreshBtn').hidden = true; $('setup').hidden = false; $('tokenLink').href = tokenUrl(); }
+function showDash() { $('setup').hidden = true; $('dash').hidden = false; $('refreshBtn').hidden = false; $('repoLink').href = 'https://github.com/' + OWNER + '/' + REPO; loadAll(true); }
+
+$('connectBtn').onclick = connect;
+$('tokenInput').onkeydown = e => { if (e.key === 'Enter') connect(); };
+$('sendBtn').onclick = () => dispatch(false);
+$('dryBtn').onclick = () => dispatch(true);
+$('toggleBtn').onclick = toggle;
+$('saveBtn').onclick = saveSettings;
+$('tplInput').oninput = renderPreview;
+$('refreshBtn').onclick = () => loadAll(false);
+$('logoutBtn').onclick = logout;
+document.addEventListener('visibilitychange', () => { if (!document.hidden && token) loadAll(true); });
+
+token = store(true);
+token ? showDash() : showSetup();
+</script>
+</body>
+</html>
